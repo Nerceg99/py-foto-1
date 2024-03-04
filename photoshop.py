@@ -68,6 +68,8 @@ def blur():
     img = img.filter(ImageFilter.GaussianBlur(radius=int(blur_radius.get())))
     label_slika = ImageTk.PhotoImage(img)
     lbl_slika['image'] = label_slika
+
+
 def set_blur_radius(value):
     blur_radius.set(int(value))
     blur()
