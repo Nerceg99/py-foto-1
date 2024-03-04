@@ -1,58 +1,128 @@
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageFilter
+from tkinter import filedialog as fd
 import tkinter as tk
 
 
 #region CONSTS
-
+photo_path = 'algebra_campus.jpg'
+photo_object = Image.open(photo_path)
+reduce_scale = 3
+photo_h_size = int(photo_object.size[0] / reduce_scale)
+photo_v_size = int(photo_object.size[1] / reduce_scale)
+photo_object = photo_object.resize((photo_h_size, photo_v_size))
+photo_props = f'Photo size: {photo_object.size[0]} x {photo_object.size[1]}\nPhoto mode: {photo_object.mode}'
 #endregion
 
 
 #region FUNCTIONS
 def flip_left_right():
-    print('Flip Left Right')
+    global photo_object, lbl_photo_image
+    photo_object = photo_object.transpose(Image.FLIP_LEFT_RIGHT)
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
 
 def flip_up_down():
-    print('Flip Up Down')
+    global photo_object, lbl_photo_image
+    photo_object = photo_object.transpose(Image.FLIP_TOP_BOTTOM)
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
 
-def blur():
-    print('Blur')
+
+def bw():
+    global photo_object, lbl_photo_image
+    photo_object = photo_object.convert(mode='L')
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
+
+def blur(radius):
+    global photo_object, lbl_photo_image
+    photo_object = Image.open(photo_path)
+
+    if photo_object.size[0] > 1500:
+        reduce_scale = 3
+        photo_h_size = int(photo_object.size[0] / reduce_scale)
+        photo_v_size = int(photo_object.size[1] / reduce_scale)
+        photo_object = photo_object.resize((photo_h_size, photo_v_size))
+
+    photo_object = photo_object.filter(ImageFilter.GaussianBlur(radius=int(radius)))
+    
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
 
 def contour():
-    print('Contour')
+    global photo_object, lbl_photo_image
+    photo_object = photo_object.filter(ImageFilter.CONTOUR)
+    
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
 
 def relief():
-    print('Relief')
+    global photo_object, lbl_photo_image
+    photo_object = photo_object.filter(ImageFilter.EMBOSS)
+    
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
 
 def edges():
-    print('Edges')
+    global photo_object, lbl_photo_image
+    photo_object = photo_object.filter(ImageFilter.FIND_EDGES)
+    
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
 
 def file_save():
-    print('File Save')
+    global photo_object, lbl_photo_image
+    photo_object.save(f'{photo_path}-01.jpg')
+
 
 def file_open():
-    print('File Open')
+    global photo_path, photo_object, lbl_photo_image
+    photo_path = fd.askopenfilename(title='Open image')
+
+    photo_object = Image.open(photo_path)
+    # reduce_scale = 3
+    # photo_h_size = int(photo_object.size[0] / reduce_scale)
+    # photo_v_size = int(photo_object.size[1] / reduce_scale)
+    # photo_object = photo_object.resize((photo_h_size, photo_v_size))
+
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+
 
 def reset():
-    print('Reset')
+    global photo_object, lbl_photo_image
+    photo_object = Image.open(photo_path)
 
-def set_blur_radius(value):
-    print(f'Set Blur Radius to {value}')
+    if photo_object.size[0] > 1500:
+        reduce_scale = 3
+        photo_h_size = int(photo_object.size[0] / reduce_scale)
+        photo_v_size = int(photo_object.size[1] / reduce_scale)
+        photo_object = photo_object.resize((photo_h_size, photo_v_size))
+
+    lbl_photo_image = ImageTk.PhotoImage(photo_object)
+    lbl_photo['image'] = lbl_photo_image
+    scl_blur_var.set(1)
+
 #endregion
 
 
 #region GUI - MAIN APP
 main_window = tk.Tk()
 main_window.title('Python Photoshop')
-main_window.geometry('600x400')
 
 
 #region PHOTO LABEL
-photo_image = Image.open('algebra_campus.jpg')
-photo = ImageTk.PhotoImage(photo_image)
+lbl_photo_image = ImageTk.PhotoImage(photo_object)
 lbl_photo = tk.Label(main_window,
                      text='Prostor za sliku',
-                     image=photo)
-lbl_photo.grid(row=0, column=0)
+                     image=lbl_photo_image)
+lbl_photo.grid(row=0, column=0, rowspan=9)
 #endregion
 
 #region ACTIONS - BUTTONS
@@ -68,17 +138,22 @@ btn_flip_up_down = tk.Button(main_window,
 btn_flip_up_down.grid(row=1, column=1, padx=20)
 
 
+btn_bw = tk.Button(main_window,
+                          text='Black / White',
+                          command=bw)
+btn_bw.grid(row=2, column=1, padx=20)
+
+
 # BLUR
-btn_flip_blur = tk.Button(main_window,
-                          text='Blur',
-                          command=blur)
-btn_flip_blur.grid(row=2, column=1, padx=20)
+scl_blur_var = tk.IntVar()
+scl_blur_var.set(1)
 scl_blur = tk.Scale(main_window,
                     orient='horizontal',
+                    variable=scl_blur_var,
                     length=150,
                     from_= 1,
                     to=20,
-                    command=set_blur_radius)
+                    command=blur)
 scl_blur.grid(row=3, column=1, padx=20)
 
 
@@ -88,6 +163,8 @@ btn_flip_contour = tk.Button(main_window,
                           command=contour)
 btn_flip_contour.grid(row=4, column=1, padx=20)
 
+
+# Relief
 btn_flip_relief = tk.Button(main_window,
                           text='Relief',
                           command=relief)
@@ -116,7 +193,7 @@ btn_flip_reset.grid(row=7, column=1, sticky='E', padx=20)
 
 #region PHOTO DETAILS
 lbl_photo_details_var = tk.StringVar()
-lbl_photo_details_var.set('Pocetna vrijednost')
+lbl_photo_details_var.set(photo_props)
 lbl_photo_details = tk.Label(main_window,
                              textvariable=lbl_photo_details_var)
 lbl_photo_details.grid(row=8, column=1, padx=20)
